@@ -1,10 +1,10 @@
 # DailyPaper
 
-![Icon](assets/icon_small.png)
+<img src="assets/HomeScreen.jpg" width="200px"/>
 
-DailyPaper - get the newest publication every day.  
+DailyPaper - get the newest publication every day.
 An apple a day - keeps the doctor away... But what about a fresh paper every day.
-This android app retrieves the new publications from arxiv on a daily basis and ranks them by your 
+This android app retrieves the new publications from arxiv daily and ranks them by your
 personal preferences.
 
 ## Features
