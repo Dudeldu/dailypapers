@@ -35,21 +35,46 @@ class PaperOverviewState extends StatefulWidget {
 }
 
 class PaperOverview extends State<PaperOverviewState> {
+  Iterable<ShelfEntry> shelfEntries;
+  Future<List<Paper>> papers;
+  int retrievalStatus;
+
+  static final Widget noCategoriesTextWidget = Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+      child: Text(
+        "\n\n\nIndicate your personal preferences for at least one "
+        "category by increasing its value!\n\n\n",
+        textAlign: TextAlign.justify,
+        softWrap: true,
+        style: TextStyle(fontSize: 20),
+      ));
+
   @override
   void initState() {
     super.initState();
-    shelfEntries = new List();
+    shelfEntries = [];
     Shelf.load().then((value) {
       shelfEntries = value;
       setState(() {});
     });
-    papers = Paper.updatePapers().then((_) {
-      return Paper.loadPapers();
-    });
+    refreshPapers();
   }
 
-  Iterable<ShelfEntry> shelfEntries;
-  Future<List<Paper>> papers;
+  void refreshPapers({force = false}) async {
+    retrievalStatus = Paper.OK;
+    retrievalStatus = await Paper.updatePapers(context: context, force: force);
+    if (retrievalStatus == Paper.NO_CATEGORIES) {
+      setState(() {
+        papers = Future(() {
+          return [];
+        });
+      });
+      return;
+    }
+    setState(() {
+      papers = Paper.loadPapers();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,25 +97,29 @@ class PaperOverview extends State<PaperOverviewState> {
           child: FutureBuilder<List<Paper>>(
         future: papers,
         builder: (BuildContext context, AsyncSnapshot<List<Paper>> snapshot) {
-          if (snapshot.hasData)
+          if (snapshot.hasData) {
             return RefreshIndicator(
-                onRefresh: () {
-                  papers = Paper.updatePapers(force: true)
-                      .then((_) => Paper.loadPapers());
-                  return papers;
+                onRefresh: () async {
+                  return refreshPapers(force: true);
                 },
                 child: SingleChildScrollView(
-                    child: Container(
-                        child: ExpansionPanelList(
-                  expansionCallback: (int index, bool isExpanded) {
-                    setState(() {
-                      snapshot.data[index].isExpanded = !isExpanded;
-                    });
-                  },
-                  children: snapshot.data.map(buildPanelForPaper).toList(),
-                ))));
-          else
+                    physics: AlwaysScrollableScrollPhysics(),
+                    child: !(snapshot.data.length == 0 &&
+                            retrievalStatus == Paper.NO_CATEGORIES)
+                        ? Container(
+                            child: ExpansionPanelList(
+                            expansionCallback: (int index, bool isExpanded) {
+                              setState(() {
+                                snapshot.data[index].isExpanded = !isExpanded;
+                              });
+                            },
+                            children:
+                                snapshot.data.map(buildPanelForPaper).toList(),
+                          ))
+                        : noCategoriesTextWidget));
+          } else {
             return CircularProgressIndicator();
+          }
         },
       )),
       drawer: buildSideDrawer(),

@@ -18,7 +18,7 @@ class PreferenceSettingsView extends State<PreferenceSettingsState> {
   Future<int> status;
 
   // Only filled with data, once status was awaited
-  Map<String, int> relevanceMap;
+  Preferences preferences;
   List<String> keysSorted;
   List<String> categoriesSorted;
 
@@ -30,11 +30,13 @@ class PreferenceSettingsView extends State<PreferenceSettingsState> {
   @override
   void initState() {
     super.initState();
-    status = preferenceManager.then((preferenceManager) {
-      relevanceMap = preferenceManager.loadRelevanceMap();
+    status = preferenceManager.then((preferenceManager) async {
+      preferences = await preferenceManager.loadRelevanceMap();
 
-      keysSorted = relevanceMap.keys.toList(growable: true);
-      keysSorted.sort((k1, k2) => relevanceMap[k2].compareTo(relevanceMap[k1]));
+      keysSorted = preferences.keys().toList();
+      keysSorted.sort((k1, k2) => preferences
+          .getPreference(k2)
+          .compareTo(preferences.getPreference(k1)));
       keysSorted.removeWhere((k) => !CATEGORY_DESCRIPTIONS.containsKey(k));
 
       categoriesSorted =
@@ -75,24 +77,20 @@ class PreferenceSettingsView extends State<PreferenceSettingsState> {
           IconButton(
             icon: Icon(Icons.remove),
             onPressed: () async {
-              if (relevanceMap[key] > -1) {
-                relevanceMap[key]--;
-                (await preferenceManager).setPreference(key, relevanceMap[key]);
-                setState(() {});
-              }
+              (await preferenceManager)
+                  .setPreference(key, preferences.decrease(key));
+              setState(() {});
             },
           ),
           Text(
-            relevanceMap[key].toString(),
+            preferences.getPreference(key).toString(),
           ),
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () async {
-              if (relevanceMap[key] < 10) {
-                relevanceMap[key]++;
-                (await preferenceManager).setPreference(key, relevanceMap[key]);
-                setState(() {});
-              }
+              (await preferenceManager)
+                  .setPreference(key, preferences.increase(key));
+              setState(() {});
             },
           )
         ]));

@@ -14,9 +14,13 @@ personal preferences.
 
 ## Known Issues
 
-- Only computer science topics so far
+- Mainly designed for android app, leading to suboptimal design in web target
+- IOS App not tested so far
 
 ## Release Notes
+
+### 0.0.2
+*Generalize for all main directions instead of limitation to computer science topics*
 
 ### 0.0.1
 *The very first version* - **Enjoy!**

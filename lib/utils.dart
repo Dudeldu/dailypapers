@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 const Map<String, String> CATEGORY_DESCRIPTIONS = {
-  "astro-ph": "Astrophysics",
   "astro-ph.CO": "Cosmology and Nongalactic Astrophysics",
   "astro-ph.EP": "Earth and Planetary Astrophysics",
   "astro-ph.GA": "Astrophysics of Galaxies",
@@ -147,7 +146,6 @@ const Map<String, String> CATEGORY_DESCRIPTIONS = {
   "q-fin.RM": "Risk Management",
   "q-fin.ST": "Statistical Finance",
   "q-fin.TR": "Trading and Market Microstructure",
-  "quant-ph": "Quantum Physics",
   "stat.AP": "Applications",
   "stat.CO": "Computation",
   "stat.ME": "Methodology",
@@ -156,7 +154,38 @@ const Map<String, String> CATEGORY_DESCRIPTIONS = {
   "stat.TH": "Statistics Theory"
 };
 
-Map<int, Color> color = {
+class Directions {
+  static const List<String> ids = [
+    "astro-ph",
+    "q-bio",
+    "cs",
+    "q-fin",
+    "math",
+    "physics",
+    "quant-ph",
+    "stat"
+  ];
+  static const List<String> names = [
+    "Astrophysics",
+    "Biology",
+    "Computer Science",
+    "Finance",
+    "Math",
+    "Physics",
+    "Quantum Physics",
+    "Statistics"
+  ];
+
+  static String nameToId(String name) {
+    var index = names.indexOf(name);
+    if (index < 0) {
+      return "cs"; // Fallback to computer science although this should never happen
+    }
+    return ids[index];
+  }
+}
+
+const Map<int, Color> color = {
   50: Color.fromRGBO(179, 27, 27, .1),
   100: Color.fromRGBO(179, 27, 27, .2),
   200: Color.fromRGBO(179, 27, 27, .3),

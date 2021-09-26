@@ -24,12 +24,25 @@ class Paper {
   final List<String> categories;
   final int relevance;
 
-  static final String arxivRequestUrl =
-      "http://export.arxiv.org/api/query?search_query=cat:cs.*&"
-      "sortBy=submittedDate&sortOrder=descending&max_results=200";
-  static final String papersStorageKey = "PAPERS";
+  static final int NO_CATEGORIES = -2;
+  static final int NO_UPDATE = -1;
+  static final int OK = 0;
+  static final String arxivBaseUrl = "http://export.arxiv.org/api/query";
+  static final String sorting = "sortBy=submittedDate&sortOrder=descending";
+  static final String nrResults = "max_results=200";
 
-  static Future<int> updatePapers({bool force = false}) async {
+  static String generateArxivRequestUrlFromPreferences(Preferences preferences) {
+    var categoryQuery = preferences.preferredKeys().join("+OR+");
+    if (categoryQuery.length == 0) {
+      return "";
+    }
+    return "$arxivBaseUrl?search_query=$categoryQuery&$sorting&$nrResults";
+  }
+
+  static final String papersStorageKey = "PAPERS";
+  static final int nrPapers = 10;
+
+  static Future<int> updatePapers({context, force = false}) async {
     var prefs = await SharedPreferences.getInstance();
     var lastDate = prefs.getString("lastUpdate") ?? '';
     if (!force &&
@@ -38,25 +51,29 @@ class Paper {
             Duration(hours: 12)) {
       // Skip update if it is not forced and less than 12h
       // passed since the last one
-      return -1;
+      return NO_UPDATE;
     }
 
-    Map<String, int> relevanceMap = PreferenceManager(prefs).loadRelevanceMap();
-
-    var response = await http.get(arxivRequestUrl);
+    Preferences preferences =
+        await PreferenceManager(prefs).loadRelevanceMap(context: context);
+    var requestUrl = generateArxivRequestUrlFromPreferences(preferences);
+    if (requestUrl.length == 0) {
+      return NO_CATEGORIES;
+    }
+    var response = await http.get(requestUrl);
     var arxivResponse = XmlDocument.fromString(response.body);
-    var latestDate = DateTime.parse(arxivResponse.firstChild
-        .getChildren("entry")[0]
-        .getChild("published")
-        .text);
+    // var latestDate = DateTime.parse(arxivResponse.firstChild
+    //     .getChildren("entry")[0]
+    //     .getChild("published")
+    //     .text);
     var papers = arxivResponse.firstChild.getChildren("entry").map((paper) {
-      var publishedDate = DateTime.parse(paper.getChild("published").text);
-      if (latestDate.difference(publishedDate) > Duration(hours: 24))
-        /* if there are more than 24 hours difference compared to the newest
-         * paper in the retrieved batch then this paper is already old and
-         * shouldn't be processed
-         */
-        return null;
+      // var publishedDate = DateTime.parse(paper.getChild("published").text);
+      // if (latestDate.difference(publishedDate) > Duration(hours: 24))
+      //   /* if there are more than 24 hours difference compared to the newest
+      //    * paper in the retrieved batch then this paper is already old and
+      //    * shouldn't be processed
+      //    */
+      //   return null;
       var authors = paper
           .getChildren("author")
           .map((author) => author.getChild("name").text)
@@ -72,7 +89,7 @@ class Paper {
               .toList();
 
       var relevance = categories
-          .map((category) => relevanceMap[category] ?? 0)
+          .map((category) => preferences.getPreference(category))
           .reduce((value, element) => value + element);
 
       return Paper(
@@ -87,11 +104,11 @@ class Paper {
     }).toList();
     papers.removeWhere((element) => element == null);
     papers.sort((b, a) => a.relevance.compareTo(b.relevance));
-    papers = papers.sublist(0, min(papers.length, 10));
+    papers = papers.sublist(0, min(papers.length, nrPapers));
     prefs.setStringList(papersStorageKey,
         papers.map((paper) => paper.serializeToJson()).toList());
     prefs.setString("lastUpdate", DateTime.now().toIso8601String());
-    return 0;
+    return OK;
   }
 
   static Future<List<Paper>> loadPapers() async {
@@ -122,7 +139,7 @@ class Paper {
   }
 
   String getCategoriesDescription() {
-    var descList = new List<String>();
+    var descList = [];
     categories.forEach((e) {
       var desc = CATEGORY_DESCRIPTIONS[e];
       if (desc != null && !descList.contains(desc)) {
