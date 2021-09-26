@@ -1,4 +1,4 @@
-name: DailyPaper
+name: dailypapers
 description: Serving new interesting papers every day
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

@@ -18,7 +18,7 @@ class Shelf {
 
   static Iterable<ShelfEntry> buildEntries(List<String> titles, List<String> ids) {
     if (titles.length != ids.length) {
-      return new List();
+      return [];
     } else {
 
       return List<ShelfEntry>.generate(
@@ -28,15 +28,15 @@ class Shelf {
 
   static Future<Iterable<ShelfEntry>> load() async {
     var prefs = await SharedPreferences.getInstance();
-    var ids = prefs.getStringList(IDS_KEY) ?? new List<String>();
-    var titles = prefs.getStringList(TITLES_KEY) ?? new List<String>();
+    var ids = prefs.getStringList(IDS_KEY) ?? [];
+    var titles = prefs.getStringList(TITLES_KEY) ?? [];
     return buildEntries(titles, ids);
   }
 
   static Future<Iterable<ShelfEntry>> deleteEntry(String id) async {
     var prefs = await SharedPreferences.getInstance();
-    var ids = prefs.getStringList(IDS_KEY) ?? new List<String>();
-    var titles = prefs.getStringList(TITLES_KEY) ?? new List<String>();
+    var ids = prefs.getStringList(IDS_KEY) ?? [];
+    var titles = prefs.getStringList(TITLES_KEY) ?? [];
     var idx = ids.indexOf(id);
     ids.removeAt(idx);
     titles.removeAt(idx);
@@ -47,8 +47,8 @@ class Shelf {
 
   static Future<Iterable<ShelfEntry>> moveToShelf(Paper paper) async {
     var prefs = await SharedPreferences.getInstance();
-    var ids = prefs.getStringList(Shelf.IDS_KEY) ?? new List<String>();
-    var titles = prefs.getStringList(Shelf.TITLES_KEY) ?? new List<String>();
+    var ids = prefs.getStringList(Shelf.IDS_KEY) ?? [];
+    var titles = prefs.getStringList(Shelf.TITLES_KEY) ?? [];
     if (!ids.contains(paper.id)) {
       ids.add(paper.id);
       titles.add(paper.title);

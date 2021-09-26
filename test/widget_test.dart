@@ -7,7 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:DailyPaper/main.dart';
+import 'package:dailypapers/main.dart';
 
 void main() {
   testWidgets('Sample test', (WidgetTester tester) async {
