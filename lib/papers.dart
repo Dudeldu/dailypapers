@@ -31,7 +31,8 @@ class Paper {
   static final String sorting = "sortBy=submittedDate&sortOrder=descending";
   static final String nrResults = "max_results=200";
 
-  static String generateArxivRequestUrlFromPreferences(Preferences preferences) {
+  static String generateArxivRequestUrlFromPreferences(
+      Preferences preferences) {
     var categoryQuery = preferences.preferredKeys().join("+OR+");
     if (categoryQuery.length == 0) {
       return "";
@@ -62,18 +63,20 @@ class Paper {
     }
     var response = await http.get(requestUrl);
     var arxivResponse = XmlDocument.fromString(response.body);
-    // var latestDate = DateTime.parse(arxivResponse.firstChild
-    //     .getChildren("entry")[0]
-    //     .getChild("published")
-    //     .text);
+    var latestDate = DateTime.parse(arxivResponse.firstChild
+        .getChildren("entry")[0]
+        .getChild("published")
+        .text);
     var papers = arxivResponse.firstChild.getChildren("entry").map((paper) {
-      // var publishedDate = DateTime.parse(paper.getChild("published").text);
-      // if (latestDate.difference(publishedDate) > Duration(hours: 24))
-      //   /* if there are more than 24 hours difference compared to the newest
-      //    * paper in the retrieved batch then this paper is already old and
-      //    * shouldn't be processed
-      //    */
-      //   return null;
+      var publishedDate = DateTime.parse(paper.getChild("published").text);
+      if (publishedDate.year != latestDate.year ||
+          publishedDate.month != latestDate.month ||
+          publishedDate.day != latestDate.day)
+        /* if there are more than 24 hours difference compared to the newest
+         * paper in the retrieved batch then this paper is already old and
+         * shouldn't be processed
+         */
+        return null;
       var authors = paper
           .getChildren("author")
           .map((author) => author.getChild("name").text)
