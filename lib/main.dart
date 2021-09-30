@@ -97,7 +97,7 @@ class PaperOverview extends State<PaperOverviewState> {
                   MaterialPageRoute(
                       builder: (context) => PreferenceSettingsState()));
             },
-            icon: Icon(Icons.low_priority),
+            icon: Icon(Icons.rule),
           )
         ],
       ),

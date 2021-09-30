@@ -143,19 +143,19 @@ class Paper {
     return localTime.year.toString() + "-" + monthString + "-" + dayString;
   }
 
+  Iterable<String> getCategories() {
+    // Only returning unique categories while preserving their order
+    var set = new Set();
+    return categories.where((element) => set.add(element));
+  }
+
   String getCategoriesDescription() {
-    /* Implements the same as the following but preserves the
-     * order of categories
-     * ```dart
-     * return categories
-     *    .map((e) => CATEGORY_DESCRIPTIONS[e])
-     *    .where((element) => element != null)
-     *    .toSet()
-     *    .join(", ");
-     * ```
+    /* Can't simply use getCategories to retrieve unique category descriptions
+     * as multiple different category ids can map to the same category
+     * description
      */
     var set = new Set();
-    return categories
+    return getCategories()
         .map((e) => CATEGORY_DESCRIPTIONS[e])
         .where((element) => element != null)
         .where((e) => set.add(e))

@@ -48,6 +48,38 @@ class PreferenceSettingsView extends State<PreferenceSettingsState> {
     return Scaffold(
         appBar: AppBar(
           title: Text("Preferences"),
+          actions: [
+            IconButton(
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                          title: Text("Reset all Preferences"),
+                          content: Text(
+                              "Do you really want to reset all preferences?"),
+                          actions: [
+                            TextButton(
+                              child: Text("Cancel"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            TextButton(
+                              child: Text("Reset All"),
+                              onPressed: () async {
+                                  (await preferenceManager).resetPreferences();
+                                  Navigator.of(context).pop();
+                                  setState(() {
+                                    preferences = Preferences(new Map<String, int>());
+                                  });
+                              }
+                            )
+                          ],
+                        ));
+              },
+              icon: Icon(Icons.delete_forever),
+            )
+          ],
         ),
         body: FutureBuilder<int>(
             future: status,

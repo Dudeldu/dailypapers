@@ -11,7 +11,13 @@ const int MAX_PREFERENCE = 20;
 class Preferences {
   Map<String, int> preferences;
 
-  Preferences(this.preferences);
+  Preferences(this.preferences) {
+    for (var key in CATEGORY_DESCRIPTIONS.keys) {
+      if (!preferences.containsKey(key)) {
+        preferences[key] = 0;
+      }
+    }
+  }
 
   int getPreference(String category) {
     return preferences[category] ?? 0;
@@ -48,7 +54,7 @@ class PreferenceManager {
 
   PreferenceManager(this.sharedPrefs);
 
-  resetPreferences() async {
+  void resetPreferences() {
     for (var key in sharedPrefs.getKeys()) {
       if (key.startsWith(PREFERENCE_STORAGE_PREFIX)) {
         sharedPrefs.remove(key);
@@ -86,11 +92,6 @@ class PreferenceManager {
         }
       }
     }
-    for (var key in CATEGORY_DESCRIPTIONS.keys) {
-      if (!relevanceMap.containsKey(key)) {
-        relevanceMap[key] = 0;
-      }
-    }
     return Preferences(relevanceMap);
   }
 
@@ -102,9 +103,9 @@ class PreferenceManager {
     return sharedPrefs.getInt(PREFERENCE_STORAGE_PREFIX + category) ?? 0;
   }
 
-  void increasePreferenceOnShelving(List<String> categories) {
-    for (var category in categories) {
+  void increasePreferenceOnShelving(Iterable<String> categories) {
+    categories.forEach((category) {
       setPreference(category, min(getPreference(category) + 2, MAX_PREFERENCE));
-    }
+    });
   }
 }

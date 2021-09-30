@@ -49,10 +49,11 @@ class Shelf {
     if (!ids.contains(paper.id)) {
       ids.add(paper.id);
       titles.add(paper.title);
+      PreferenceManager(prefs)
+          .increasePreferenceOnShelving(paper.getCategories());
     }
     prefs.setStringList(Shelf.IDS_KEY, ids);
     prefs.setStringList(Shelf.TITLES_KEY, titles);
-    PreferenceManager(prefs).increasePreferenceOnShelving(paper.categories);
     return buildEntries(titles, ids);
   }
 }
