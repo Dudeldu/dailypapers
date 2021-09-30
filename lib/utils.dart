@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:url_launcher/url_launcher.dart';
+
 const Map<String, String> CATEGORY_DESCRIPTIONS = {
   "astro-ph.CO": "Cosmology and Nongalactic Astrophysics",
   "astro-ph.EP": "Earth and Planetary Astrophysics",
@@ -183,6 +185,10 @@ class Directions {
     }
     return ids[index];
   }
+}
+
+void launchWeb(String url) async {
+  if (await canLaunch(url)) await launch(url);
 }
 
 const Map<int, Color> color = {

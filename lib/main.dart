@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'utils.dart';
 import 'shelf.dart';
@@ -35,11 +34,12 @@ class PaperOverviewState extends StatefulWidget {
 }
 
 class PaperOverview extends State<PaperOverviewState> {
-  Iterable<ShelfEntry> shelfEntries;
-  Future<List<Paper>> papers;
-  int retrievalStatus;
+  int retrievalStatus = Paper.OK;
 
-  static final Widget noCategoriesTextWidget = Padding(
+  Future<List<ShelfEntry>> shelfEntries;
+  Future<List<Paper>> papers;
+
+  static const Widget NO_CATEGORIES_WIDGET = Padding(
       padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Text(
         "\n\n\nIndicate your personal preferences for at least one "
@@ -48,21 +48,29 @@ class PaperOverview extends State<PaperOverviewState> {
         softWrap: true,
         style: TextStyle(fontSize: 20),
       ));
+  static const Widget DRAWER_HEADER = DrawerHeader(
+    decoration: BoxDecoration(
+        color: Color.fromRGBO(179, 27, 27, .8),
+        image: DecorationImage(image: AssetImage('assets/books.jpg'))),
+    child: Text(
+      'Shelf',
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 24,
+      ),
+    ),
+  );
 
   @override
   void initState() {
     super.initState();
-    shelfEntries = [];
-    Shelf.load().then((value) {
-      shelfEntries = value;
-      setState(() {});
-    });
+    shelfEntries = Shelf.load();
     refreshPapers();
   }
 
   void refreshPapers({force = false}) async {
     retrievalStatus = Paper.OK;
-    retrievalStatus = await Paper.updatePapers(context: context, force: force);
+    retrievalStatus = await Paper.updatePapers(context, force: force);
     if (retrievalStatus == Paper.NO_CATEGORIES) {
       setState(() {
         papers = Future(() {
@@ -104,9 +112,9 @@ class PaperOverview extends State<PaperOverviewState> {
                 },
                 child: SingleChildScrollView(
                     physics: AlwaysScrollableScrollPhysics(),
-                    child: !(snapshot.data.length == 0 &&
-                            retrievalStatus == Paper.NO_CATEGORIES)
-                        ? Container(
+                    child: retrievalStatus == Paper.NO_CATEGORIES
+                        ? NO_CATEGORIES_WIDGET
+                        : Container(
                             child: ExpansionPanelList(
                             expansionCallback: (int index, bool isExpanded) {
                               setState(() {
@@ -115,8 +123,7 @@ class PaperOverview extends State<PaperOverviewState> {
                             },
                             children:
                                 snapshot.data.map(buildPanelForPaper).toList(),
-                          ))
-                        : noCategoriesTextWidget));
+                          ))));
           } else {
             return CircularProgressIndicator();
           }
@@ -126,27 +133,34 @@ class PaperOverview extends State<PaperOverviewState> {
     );
   }
 
-  Drawer buildSideDrawer() {
+  FutureBuilder buildSideDrawer() {
+    return FutureBuilder<Iterable<ShelfEntry>>(
+        future: shelfEntries,
+        builder: (BuildContext context,
+            AsyncSnapshot<Iterable<ShelfEntry>> snapshot) {
+          if (snapshot.hasData)
+            return fillDrawerWithShelfOrLoadingIndicator(snapshot.data
+                .map((entry) => ListTile(
+                      title: Text(entry.title),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () => setState(() {
+                          shelfEntries = Shelf.deleteEntry(entry.id);
+                        }),
+                      ),
+                      onTap: () => launchWeb(entry.id),
+                    ))
+                .toList());
+          else
+            return fillDrawerWithShelfOrLoadingIndicator(
+                [CircularProgressIndicator()]);
+        });
+  }
+
+  Drawer fillDrawerWithShelfOrLoadingIndicator(List<Widget> widgets) {
     return Drawer(
         child: ListView(
-      padding: EdgeInsets.zero,
-      children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                  color: Color.fromRGBO(179, 27, 27, .8),
-                  image:
-                      DecorationImage(image: AssetImage('assets/books.jpg'))),
-              child: Text(
-                'Shelf',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-            )
-          ] +
-          generateShelf(),
-    ));
+            padding: EdgeInsets.zero, children: [DRAWER_HEADER] + widgets));
   }
 
   ExpansionPanel buildPanelForPaper(Paper paper) {
@@ -178,7 +192,7 @@ class PaperOverview extends State<PaperOverviewState> {
                     ]),
                 leading: IconButton(
                   icon: Icon(Icons.picture_as_pdf),
-                  onPressed: paper.launchWeb,
+                  onPressed: () => launchWeb(paper.id),
                 )),
           ]);
         },
@@ -199,10 +213,9 @@ class PaperOverview extends State<PaperOverviewState> {
               )),
               IconButton(
                   icon: Icon(Icons.save),
-                  onPressed: () async {
-                    shelfEntries = await Shelf.moveToShelf(paper);
-                    setState(() {});
-                  },
+                  onPressed: () => setState(() {
+                        shelfEntries = Shelf.moveToShelf(paper);
+                      }),
                   color: Colors.black,
                   alignment: Alignment.centerRight)
             ])
@@ -210,28 +223,5 @@ class PaperOverview extends State<PaperOverviewState> {
           padding: EdgeInsets.all(15),
         ),
         isExpanded: paper.isExpanded);
-  }
-
-  List<Widget> generateShelf() {
-    return shelfEntries.map((entry) {
-      return ListTile(
-        title: Text(entry.title),
-        trailing: IconButton(
-          icon: Icon(Icons.delete),
-          onPressed: () async {
-            shelfEntries = await Shelf.deleteEntry(entry.id);
-            setState(() {});
-          },
-        ),
-        onTap: () async {
-          final url = entry.id;
-          if (await canLaunch(url)) {
-            await launch(url);
-          } else {
-            throw 'Could not launch $url';
-          }
-        },
-      );
-    }).toList();
   }
 }

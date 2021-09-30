@@ -14,26 +14,23 @@ class Shelf {
   static const String IDS_KEY = "SAVED_IDS";
   static const String TITLES_KEY = "SAVED_TITLES";
 
-  Iterable<ShelfEntry> entries;
-
-  static Iterable<ShelfEntry> buildEntries(List<String> titles, List<String> ids) {
+  static List<ShelfEntry> buildEntries(List<String> titles, List<String> ids) {
     if (titles.length != ids.length) {
       return [];
     } else {
-
       return List<ShelfEntry>.generate(
           titles.length, (i) => ShelfEntry(titles[i], ids[i]));
     }
   }
 
-  static Future<Iterable<ShelfEntry>> load() async {
+  static Future<List<ShelfEntry>> load() async {
     var prefs = await SharedPreferences.getInstance();
     var ids = prefs.getStringList(IDS_KEY) ?? [];
     var titles = prefs.getStringList(TITLES_KEY) ?? [];
     return buildEntries(titles, ids);
   }
 
-  static Future<Iterable<ShelfEntry>> deleteEntry(String id) async {
+  static Future<List<ShelfEntry>> deleteEntry(String id) async {
     var prefs = await SharedPreferences.getInstance();
     var ids = prefs.getStringList(IDS_KEY) ?? [];
     var titles = prefs.getStringList(TITLES_KEY) ?? [];
@@ -45,7 +42,7 @@ class Shelf {
     return buildEntries(titles, ids);
   }
 
-  static Future<Iterable<ShelfEntry>> moveToShelf(Paper paper) async {
+  static Future<List<ShelfEntry>> moveToShelf(Paper paper) async {
     var prefs = await SharedPreferences.getInstance();
     var ids = prefs.getStringList(Shelf.IDS_KEY) ?? [];
     var titles = prefs.getStringList(Shelf.TITLES_KEY) ?? [];

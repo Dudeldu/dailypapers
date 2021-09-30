@@ -43,13 +43,14 @@ class Preferences {
 }
 
 class PreferenceManager {
+  static const String PREFERENCE_STORAGE_PREFIX = "RELEVANCE";
   SharedPreferences sharedPrefs;
 
   PreferenceManager(this.sharedPrefs);
 
   resetPreferences() async {
     for (var key in sharedPrefs.getKeys()) {
-      if (key.startsWith("RELEVANCE")) {
+      if (key.startsWith(PREFERENCE_STORAGE_PREFIX)) {
         sharedPrefs.remove(key);
       }
     }
@@ -58,8 +59,10 @@ class PreferenceManager {
   Future<Preferences> loadRelevanceMap({context}) async {
     var relevanceMap = new Map<String, int>();
     for (var key in sharedPrefs.getKeys()) {
-      if (key.startsWith("RELEVANCE") && key.trim() != "RELEVANCE") {
-        relevanceMap[key.replaceAll("RELEVANCE", "")] = sharedPrefs.getInt(key);
+      if (key.startsWith(PREFERENCE_STORAGE_PREFIX) &&
+          key.trim() != PREFERENCE_STORAGE_PREFIX) {
+        relevanceMap[key.replaceAll(PREFERENCE_STORAGE_PREFIX, "")] =
+            sharedPrefs.getInt(key);
       }
     }
     /* if relevance Map has still no keys it is a new installation
@@ -70,8 +73,7 @@ class PreferenceManager {
       var mainTopic = "";
       await SelectDialog.showModal<String>(context,
           label: "Choose main direction",
-          items: Directions.names,
-          onChange: (String selected) {
+          items: Directions.names, onChange: (String selected) {
         mainTopic = selected;
       });
       if (mainTopic != "") {
@@ -93,11 +95,11 @@ class PreferenceManager {
   }
 
   void setPreference(String category, int value) {
-    sharedPrefs.setInt("RELEVANCE" + category, value);
+    sharedPrefs.setInt(PREFERENCE_STORAGE_PREFIX + category, value);
   }
 
   int getPreference(String category) {
-    return sharedPrefs.getInt("RELEVANCE" + category) ?? 0;
+    return sharedPrefs.getInt(PREFERENCE_STORAGE_PREFIX + category) ?? 0;
   }
 
   void increasePreferenceOnShelving(List<String> categories) {
