@@ -32,13 +32,15 @@ class PreferenceSettingsView extends State<PreferenceSettingsState> {
       preferences = await preferenceManager.loadRelevanceMap();
 
       keysSorted = preferences.keys().toList();
-      keysSorted.sort((k1, k2) => preferences
-          .getPreference(k2)
-          .compareTo(preferences.getPreference(k1)));
+      keysSorted.sort((k1, k2) {
+        var p2 = preferences.getPreference(k2);
+        var p1 = preferences.getPreference(k1);
+        return p1 == p2 ? k2.compareTo(k1) : p2.compareTo(p1);
+      });
       keysSorted.removeWhere((k) => !CATEGORY_DESCRIPTIONS.containsKey(k));
 
       categoriesSorted =
-          keysSorted.map<String>((k) => CATEGORY_DESCRIPTIONS[k]).toList();
+          keysSorted.map((k) => CATEGORY_DESCRIPTIONS[k]).toList();
       return 0;
     });
   }
@@ -65,15 +67,15 @@ class PreferenceSettingsView extends State<PreferenceSettingsState> {
                               },
                             ),
                             TextButton(
-                              child: Text("Reset All"),
-                              onPressed: () async {
+                                child: Text("Reset All"),
+                                onPressed: () async {
                                   (await preferenceManager).resetPreferences();
                                   Navigator.of(context).pop();
                                   setState(() {
-                                    preferences = Preferences(new Map<String, int>());
+                                    preferences =
+                                        Preferences(new Map<String, int>());
                                   });
-                              }
-                            )
+                                })
                           ],
                         ));
               },
